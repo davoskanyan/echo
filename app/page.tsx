@@ -100,7 +100,7 @@ export default function Home() {
           className="hover:underline hover:underline-offset-4"
           onClick={async () => {
             'use server';
-            void fetch('http://localhost:3000/api/sendMessage', {
+            void fetch('http://localhost:3000/api/slack/message', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',

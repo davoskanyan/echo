@@ -1,9 +1,10 @@
 import { WebClient } from '@slack/web-api';
 
 const token = process.env.SLACK_BOT_TOKEN;
+const channelId = process.env.SLACK_CHANNEL as string;
 const web = new WebClient(token);
 
-async function sendSlackMessage(text: string, channel: string = 'echoo') {
+async function sendSlackMessage(text: string, channel: string = channelId) {
   try {
     return await web.chat.postMessage({
       channel,
