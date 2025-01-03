@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from 'next/image';
 
 export default function Home() {
   return (
@@ -14,7 +14,7 @@ export default function Home() {
         />
         <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
           <li className="mb-2">
-            Get started by editing{" "}
+            Get started by editing{' '}
             <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
               app/page.tsx
             </code>
@@ -95,6 +95,24 @@ export default function Home() {
           />
           Go to nextjs.org →
         </a>
+
+        <button
+          className="hover:underline hover:underline-offset-4"
+          onClick={async () => {
+            'use server';
+            void fetch('http://localhost:3000/api/sendMessage', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                text: 'Hello from Next.js!',
+              }),
+            });
+          }}
+        >
+          Test Slack Message
+        </button>
       </footer>
     </div>
   );
