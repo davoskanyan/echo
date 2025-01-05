@@ -36,15 +36,12 @@ Keep the tone friendly and supportive, making sure I don’t feel overwhelmed
 `;
 
 export async function POST(request: Request) {
-  // let { text } = await request.json();
-  // console.log('dv:', `${process.env.NEXT_PUBLIC_BASE_URL}/notion/tasks`);
+  const { text } = await request.json();
   const tasksResponse = await fetch(
     `${process.env.NEXT_PUBLIC_BASE_URL}/api/notion/tasks`,
   );
   const tasks = await tasksResponse.json();
   const tasksStr = JSON.stringify(tasks, null, 2);
-
-  const text = 'How much time do I have until my text task';
 
   try {
     const completion = await openai.chat.completions.create({
@@ -54,14 +51,14 @@ export async function POST(request: Request) {
           role: 'developer',
           content: getSystemMessage(tasksStr),
         },
-        {
-          role: 'developer',
-          content: reminderSystemMessage,
-        },
         // {
-        //   role: 'user',
-        //   content: text,
+        //   role: 'developer',
+        //   content: reminderSydstemMessage,
         // },
+        {
+          role: 'user',
+          content: text,
+        },
       ],
     });
     const output = completion.choices[0].message.content;
