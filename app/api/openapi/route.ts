@@ -1,9 +1,16 @@
 import OpenAI from 'openai';
 
+interface ChatCompletionMessageParam {
+  role: 'developer' | 'user' | 'assistant';
+  content: string;
+}
+
 const openApiToken = process.env.OPENAI_API_TOKEN as string;
 const openai = new OpenAI({
   apiKey: openApiToken,
 });
+
+let lastMessages: Array<ChatCompletionMessageParam> = [];
 
 function getCurrentTime() {
   const currentDate = new Date();
@@ -22,6 +29,8 @@ function getSystemMessage(tasks: string) {
   return `You are Echo, a task management assistant designed to help with planning, brainstorming, organizing tasks, and managing priorities. Keep your tone friendly, encouraging, and helpful.
 
 I would like you to respond with short answers and provide one question or suggestion at a time.
+
+For now you can just provide info on my tasks. You can't create, update, or delete tasks.
 
 Current time is: ${getCurrentTime()}
 
@@ -43,6 +52,12 @@ export async function POST(request: Request) {
   const tasks = await tasksResponse.json();
   const tasksStr = JSON.stringify(tasks, null, 2);
 
+  const userMessage: ChatCompletionMessageParam = {
+    role: 'user',
+    content: text,
+  };
+  lastMessages.push(userMessage);
+
   try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -51,18 +66,18 @@ export async function POST(request: Request) {
           role: 'developer',
           content: getSystemMessage(tasksStr),
         },
-        // {
-        //   role: 'developer',
-        //   content: reminderSydstemMessage,
-        // },
-        {
-          role: 'user',
-          content: text,
-        },
+        ...lastMessages,
       ],
     });
-    const output = completion.choices[0].message.content;
-    console.log('dv:', output);
+    const output = completion.choices[0].message.content as string;
+    lastMessages.push({
+      role: 'assistant',
+      content: output,
+    });
+    if (lastMessages.length > 10) {
+      lastMessages = lastMessages.slice(-10);
+    }
+
     return Response.json({ completion: output });
   } catch (error: unknown) {
     return Response.json(error, { status: 500 });
