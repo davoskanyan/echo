@@ -1,4 +1,7 @@
 const channelId = process.env.SLACK_CHANNEL as string;
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL as string;
+
+console.log('dv:', { baseUrl });
 
 let lastEventTime: number | undefined;
 
