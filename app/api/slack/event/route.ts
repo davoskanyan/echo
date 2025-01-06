@@ -1,7 +1,7 @@
 const channelId = process.env.SLACK_CHANNEL as string;
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL as string;
+const vercelUrl = process.env.VERCEL_URL as string;
 
-console.log('dv:', { baseUrl });
+console.log('dv:', { vercelUrl });
 
 let lastEventTime: number | undefined;
 
