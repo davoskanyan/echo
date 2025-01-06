@@ -37,12 +37,12 @@ Current time is: ${getCurrentTime()}
 Here are all my tasks: ${tasks}`;
 }
 
-const reminderSystemMessage = `
-Please first check if there are any tasks coming up or things I need to prepare for.
-If so, remind me about them in a calm, non-urgent way. 
-If there’s nothing to prepare, ask if I’d like to talk about my tasks, check my progress, or discuss anything else. 
-Keep the tone friendly and supportive, making sure I don’t feel overwhelmed
-`;
+// const reminderSystemMessage = `
+// Please first check if there are any tasks coming up or things I need to prepare for.
+// If so, remind me about them in a calm, non-urgent way.
+// If there’s nothing to prepare, ask if I’d like to talk about my tasks, check my progress, or discuss anything else.
+// Keep the tone friendly and supportive, making sure I don’t feel overwhelmed
+// `;
 
 export async function POST(request: Request) {
   const { text } = await request.json();

@@ -7,7 +7,7 @@ const notion = new Client({ auth: notionApiKey });
 
 const filteredStatuses = ['Archived', 'Done', 'Canceled'];
 
-export const getDatabase = async (databaseId: string) => {
+const getDatabase = async (databaseId: string) => {
   try {
     const response = await notion.databases.query({
       database_id: databaseId,
