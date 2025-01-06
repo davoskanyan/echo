@@ -1,3 +1,5 @@
+import { baseUrl } from '@/utils/baseUrl';
+
 const channelId = process.env.SLACK_CHANNEL as string;
 const vercelUrl = process.env.VERCEL_URL as string;
 
@@ -21,15 +23,12 @@ export async function POST(request: Request) {
     const { type: eventType, text, channel, bot_id } = event;
 
     if (eventType === 'message' && channel === channelId && !bot_id) {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/openapi`,
-        {
-          method: 'POST',
-          body: JSON.stringify({ text }),
-        },
-      );
+      const response = await fetch(`${baseUrl}/api/openapi`, {
+        method: 'POST',
+        body: JSON.stringify({ text }),
+      });
       const answer = await response.json();
-      await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/slack/message`, {
+      await fetch(`${baseUrl}/api/slack/message`, {
         method: 'POST',
         body: JSON.stringify({ text: answer.completion }),
       });

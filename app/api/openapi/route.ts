@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { baseUrl } from '@/utils/baseUrl';
 
 interface ChatCompletionMessageParam {
   role: 'developer' | 'user' | 'assistant';
@@ -46,9 +47,7 @@ Here are all my tasks: ${tasks}`;
 
 export async function POST(request: Request) {
   const { text } = await request.json();
-  const tasksResponse = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/api/notion/tasks`,
-  );
+  const tasksResponse = await fetch(`${baseUrl}/api/notion/tasks`);
   const tasks = await tasksResponse.json();
   const tasksStr = JSON.stringify(tasks, null, 2);
 
