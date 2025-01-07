@@ -1,17 +1,12 @@
 import OpenAI from 'openai';
-import { baseUrl } from '@/utils/baseUrl';
-
-interface ChatCompletionMessageParam {
-  role: 'developer' | 'user' | 'assistant';
-  content: string;
-}
+import { fetchSlackConversation } from '@/features/slackConversation';
+import { fetchNotionTasks } from '@/features/notionTasks';
+import { ConversationMessage } from '@/entities/conversation';
 
 const openApiToken = process.env.OPENAI_API_TOKEN as string;
 const openai = new OpenAI({
   apiKey: openApiToken,
 });
-
-let lastMessages: Array<ChatCompletionMessageParam> = [];
 
 function getCurrentTime() {
   const currentDate = new Date();
@@ -38,6 +33,15 @@ Current time is: ${getCurrentTime()}
 Here are all my tasks: ${tasks}`;
 }
 
+function mapGptMessages(messages: Array<ConversationMessage>) {
+  return messages.map((message) => {
+    return {
+      role: message.type,
+      content: message.text,
+    };
+  });
+}
+
 // const reminderSystemMessage = `
 // Please first check if there are any tasks coming up or things I need to prepare for.
 // If so, remind me about them in a calm, non-urgent way.
@@ -45,38 +49,31 @@ Here are all my tasks: ${tasks}`;
 // Keep the tone friendly and supportive, making sure I don’t feel overwhelmed
 // `;
 
-export async function POST(request: Request) {
-  const { text } = await request.json();
-  const tasksResponse = await fetch(`${baseUrl}/api/notion/tasks`);
-  const tasks = await tasksResponse.json();
-  const tasksStr = JSON.stringify(tasks, null, 2);
+export async function POST() {
+  console.log('dv: 1', 'start');
+  const [tasks, slackConversation] = await Promise.all([
+    fetchNotionTasks(),
+    fetchSlackConversation(),
+  ]);
 
-  const userMessage: ChatCompletionMessageParam = {
-    role: 'user',
-    content: text,
-  };
-  lastMessages.push(userMessage);
+  const { messages } = slackConversation;
+  const gptMessages = mapGptMessages(messages);
+  console.log('dv: 2', { tasks, gptMessages });
 
   try {
+    console.log('dv: 3', 'trying complete');
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         {
           role: 'developer',
-          content: getSystemMessage(tasksStr),
+          content: getSystemMessage(JSON.stringify(tasks, null, 2)),
         },
-        ...lastMessages,
+        ...gptMessages,
       ],
     });
+    console.log('dv: 4', completion);
     const output = completion.choices[0].message.content as string;
-    lastMessages.push({
-      role: 'assistant',
-      content: output,
-    });
-    if (lastMessages.length > 10) {
-      lastMessages = lastMessages.slice(-10);
-    }
-
     return Response.json({ completion: output });
   } catch (error: unknown) {
     return Response.json(error, { status: 500 });
