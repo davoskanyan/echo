@@ -1,4 +1,9 @@
-import { baseUrl } from '@/utils/baseUrl';
+import { fetchNotionTasks } from '@/features/notionTasks';
+import {
+  fetchSlackConversation,
+  sendSlackMessage,
+} from '@/features/slackConversation';
+import { getOpenaiChatCompletion } from '@/features/openaiChat';
 
 const channelId = process.env.SLACK_CHANNEL as string;
 
@@ -20,18 +25,20 @@ export async function POST(request: Request) {
     lastEventTime = eventTime;
 
     if (type === 'event_callback') {
-      const { type: eventType, text, channel, bot_id } = event;
+      const { type: eventType, channel, bot_id } = event;
 
       if (eventType === 'message' && channel === channelId && !bot_id) {
-        const response = await fetch(`${baseUrl}/api/openapi`, {
-          method: 'POST',
-          body: JSON.stringify({ text }),
+        const [tasks, slackConversation] = await Promise.all([
+          fetchNotionTasks(),
+          fetchSlackConversation(),
+        ]);
+
+        const answer = await getOpenaiChatCompletion({
+          tasks,
+          messages: slackConversation.messages,
         });
-        const answer = await response.json();
-        await fetch(`${baseUrl}/api/slack/message`, {
-          method: 'POST',
-          body: JSON.stringify({ text: answer.completion }),
-        });
+
+        await sendSlackMessage(answer);
       }
     }
 

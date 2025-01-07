@@ -1,4 +1,4 @@
-export interface Task {
+export interface PersonalTask {
   name: string;
   status: string;
   priority: string;

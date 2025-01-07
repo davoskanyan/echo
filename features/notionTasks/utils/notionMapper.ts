@@ -1,7 +1,7 @@
 /* eslint-disable */
-import { Task } from '@/entities/task';
+import { PersonalTask } from '@/entities/personalTask';
 
-export function mapNotionTasks(db: any): Array<Task> {
+export function mapNotionTasks(db: any): Array<PersonalTask> {
   try {
     return db.map((row: any) => ({
       name: row.properties['Task name'].title[0].text.content,
