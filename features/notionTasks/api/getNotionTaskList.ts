@@ -1,12 +1,12 @@
 import { notionClient } from '@/shared/notionClient';
 import { NOTION_TASKS_DATABASE_ID } from '@/shared/consts';
 
-import { mapNotionTasks } from '../utils/notionMapper';
+import { mapNotionTaskList } from '../utils/notionMapper';
 import { NotionTaskRowResponse } from '../models/NotionTaskRowResponse';
 
 const filteredStatuses = ['Archived', 'Done', 'Canceled'];
 
-export async function fetchNotionTasks() {
+export async function getNotionTaskList() {
   const response = await notionClient.databases.query({
     database_id: NOTION_TASKS_DATABASE_ID,
     filter: {
@@ -19,7 +19,7 @@ export async function fetchNotionTasks() {
     },
   });
 
-  return mapNotionTasks(
+  return mapNotionTaskList(
     response.results as unknown as Array<NotionTaskRowResponse>,
   );
 }

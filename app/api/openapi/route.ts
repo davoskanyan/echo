@@ -1,11 +1,11 @@
 import { fetchSlackConversation } from '@/features/slackConversation';
-import { fetchNotionTasks } from '@/features/notionTasks';
+import { getNotionTaskList } from '@/features/notionTasks';
 import { getOpenaiChatCompletion } from '@/features/openaiChat';
 
 export async function POST() {
   try {
     const [notionTasks, slackConversation] = await Promise.all([
-      fetchNotionTasks(),
+      getNotionTaskList(),
       fetchSlackConversation(),
     ]);
 

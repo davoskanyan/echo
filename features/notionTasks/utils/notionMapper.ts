@@ -1,21 +1,30 @@
 import { PersonalTask } from '@/entities/personalTask';
 import { NotionTaskRowResponse } from '../models/NotionTaskRowResponse';
 
-export function mapNotionTasks(
+export function mapNotionTask(
+  task: NotionTaskRowResponse,
+): PersonalTask | null {
+  return {
+    name: task.properties['Task name'].title[0].text.content,
+    status: task.properties.Status.status.name,
+    priority: task.properties['Priority API'].formula.string,
+    project: task.properties['Project API'].formula.string,
+    duration: task.properties.Duration.formula.string,
+    dueStart: task.properties.Due.date?.start,
+    dueEnd: task.properties.Due.date?.end,
+  };
+}
+
+export function mapNotionTaskList(
   db: Array<NotionTaskRowResponse>,
 ): Array<PersonalTask> {
-  try {
-    return db.map((row) => ({
-      name: row.properties['Task name'].title[0].text.content,
-      status: row.properties.Status.status.name,
-      priority: row.properties['Priority API'].formula.string,
-      project: row.properties['Project API'].formula.string,
-      duration: row.properties.Duration.formula.string,
-      dueStart: row.properties.Due.date?.start,
-      dueEnd: row.properties.Due.date?.end,
-    }));
-  } catch {
-    console.error('Error mapping Notion tasks');
-    return [];
-  }
+  return db
+    .map((taskResponse) => {
+      try {
+        return mapNotionTask(taskResponse);
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean) as Array<PersonalTask>;
 }

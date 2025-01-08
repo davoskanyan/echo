@@ -1,1 +1,2 @@
-export { fetchNotionTasks } from './api/fetchNotionTasks';
+export { getNotionTask } from './api/getNotionTask';
+export { getNotionTaskList } from './api/getNotionTaskList';

@@ -1,4 +1,4 @@
-import { fetchNotionTasks } from '@/features/notionTasks';
+import { getNotionTaskList } from '@/features/notionTasks';
 import {
   fetchSlackConversation,
   sendSlackMessage,
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
       if (eventType === 'message' && channel === channelId && !bot_id) {
         const [tasks, slackConversation] = await Promise.all([
-          fetchNotionTasks(),
+          getNotionTaskList(),
           fetchSlackConversation(),
         ]);
 
