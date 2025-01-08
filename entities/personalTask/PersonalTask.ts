@@ -4,6 +4,6 @@ export interface PersonalTask {
   priority: string;
   project: string;
   duration: string;
-  dueStart: string;
-  dueEnd: string;
+  dueStart?: string;
+  dueEnd?: string;
 }

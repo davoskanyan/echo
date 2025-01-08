@@ -1,9 +1,11 @@
-/* eslint-disable */
 import { PersonalTask } from '@/entities/personalTask';
+import { NotionTaskRowResponse } from '../models/NotionTaskRowResponse';
 
-export function mapNotionTasks(db: any): Array<PersonalTask> {
+export function mapNotionTasks(
+  db: Array<NotionTaskRowResponse>,
+): Array<PersonalTask> {
   try {
-    return db.map((row: any) => ({
+    return db.map((row) => ({
       name: row.properties['Task name'].title[0].text.content,
       status: row.properties.Status.status.name,
       priority: row.properties['Priority API'].formula.string,
