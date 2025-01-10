@@ -4,7 +4,8 @@ import {
   mapNotionTask,
   mapTaskToNotionProperties,
 } from '../utils/notionMapper';
-import { NotionTaskRowResponse } from '../models/NotionTaskRowResponse';
+import { NotionTaskResponse } from '../models/NotionTaskResponse';
+import { updateTaskSchema } from '../schemas/updateTaskSchema';
 
 interface UpdateNotionTaskOptions {
   id: string;
@@ -15,12 +16,14 @@ export async function updateNotionTask({
   id,
   taskUpdates,
 }: UpdateNotionTaskOptions) {
-  const properties = mapTaskToNotionProperties(taskUpdates);
+  const properties = mapTaskToNotionProperties(
+    updateTaskSchema.parse(taskUpdates),
+  );
 
   const response = await notionClient.pages.update({
     page_id: id,
     properties,
   });
 
-  return mapNotionTask(response as unknown as NotionTaskRowResponse);
+  return mapNotionTask(response as unknown as NotionTaskResponse);
 }

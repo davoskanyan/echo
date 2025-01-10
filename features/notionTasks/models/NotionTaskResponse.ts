@@ -1,4 +1,4 @@
-export interface NotionTaskRowResponse {
+export interface NotionTaskResponse {
   properties: {
     'Task name': {
       title: Array<{ text: { content: string } }>;

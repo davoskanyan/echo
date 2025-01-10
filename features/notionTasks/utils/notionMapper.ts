@@ -1,10 +1,8 @@
-import { PersonalTask } from '@/entities/personalTask';
-import { taskUpdateSchema } from '../schemas/taskUpdateSchema';
-import { NotionTaskRowResponse } from '../models/NotionTaskRowResponse';
+import { PersonalProject, PersonalTask } from '@/entities/personalTask';
+import { NotionTaskResponse } from '../models/NotionTaskResponse';
+import { NotionProjectResponse } from '../models/NotionProjectResponse';
 
-export function mapNotionTask(
-  task: NotionTaskRowResponse,
-): PersonalTask | null {
+export function mapNotionTask(task: NotionTaskResponse): PersonalTask | null {
   return {
     name: task.properties['Task name'].title[0].text.content,
     status: task.properties.Status.status.name,
@@ -17,7 +15,7 @@ export function mapNotionTask(
 }
 
 export function mapNotionTaskList(
-  db: Array<NotionTaskRowResponse>,
+  db: Array<NotionTaskResponse>,
 ): Array<PersonalTask> {
   return db
     .map((taskResponse) => {
@@ -31,8 +29,8 @@ export function mapNotionTaskList(
 }
 
 export function mapTaskToNotionProperties(taskUpdates: Partial<PersonalTask>) {
-  const { name, status, duration, dueStart, dueEnd, priority } =
-    taskUpdateSchema.parse(taskUpdates);
+  const { name, status, duration, dueStart, dueEnd, priority, projectId } =
+    taskUpdates;
 
   return {
     'Task name': name ? { title: [{ text: { content: name } }] } : undefined,
@@ -43,6 +41,28 @@ export function mapTaskToNotionProperties(taskUpdates: Partial<PersonalTask>) {
         ? { date: { start: dueStart, end: dueEnd, time_zone: 'Asia/Yerevan' } }
         : undefined,
     Priority: priority ? { select: { name: priority } } : undefined,
+    Project: projectId ? { relation: [{ id: projectId }] } : undefined,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any;
+}
+
+export function mapNotionProject(
+  project: NotionProjectResponse,
+): PersonalProject {
+  return {
+    id: project.id,
+    name: project.properties['Project name'].title[0].text.content,
+  };
+}
+
+export function mapNotionProjectList(db: Array<NotionProjectResponse>) {
+  return db
+    .map((projectResponse) => {
+      try {
+        return mapNotionProject(projectResponse);
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean) as Array<PersonalProject>;
 }

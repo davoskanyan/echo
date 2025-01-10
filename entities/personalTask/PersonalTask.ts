@@ -6,4 +6,5 @@ export interface PersonalTask {
   duration: string;
   dueStart?: string;
   dueEnd?: string;
+  projectId?: string;
 }

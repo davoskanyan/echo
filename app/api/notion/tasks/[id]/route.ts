@@ -1,10 +1,5 @@
-import { z } from 'zod';
 import { getNotionTask, updateNotionTask } from '@/features/notionTasks';
-
-const notionErrorSchema = z.object({
-  status: z.number(),
-  message: z.string(),
-});
+import { parseNotionError } from '@/shared/notion';
 
 export async function GET(
   _: Request,
@@ -14,12 +9,12 @@ export async function GET(
     const { id } = await params;
     const task = await getNotionTask({ id });
     return Response.json(task);
-  } catch (e) {
-    const { data: notionError } = notionErrorSchema.safeParse(e);
+  } catch (error) {
+    const notionError = parseNotionError(error);
     if (notionError) {
       return Response.json(notionError.message, { status: notionError.status });
     }
-    return Response.json('Internal Server Error', { status: 500 });
+    return Response.json(error, { status: 500 });
   }
 }
 
@@ -33,11 +28,11 @@ export async function PATCH(
 
     const updatedTask = await updateNotionTask({ id, taskUpdates });
     return Response.json(updatedTask);
-  } catch (e) {
-    const { data: notionError } = notionErrorSchema.safeParse(e);
+  } catch (error) {
+    const notionError = parseNotionError(error);
     if (notionError) {
       return Response.json(notionError.message, { status: notionError.status });
     }
-    return Response.json('Internal Server Error', { status: 500 });
+    return Response.json(error, { status: 500 });
   }
 }

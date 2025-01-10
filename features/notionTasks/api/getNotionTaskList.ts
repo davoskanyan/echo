@@ -2,7 +2,7 @@ import { notionClient } from '@/shared/notionClient';
 import { NOTION_TASKS_DATABASE_ID } from '@/shared/consts';
 
 import { mapNotionTaskList } from '../utils/notionMapper';
-import { NotionTaskRowResponse } from '../models/NotionTaskRowResponse';
+import { NotionTaskResponse } from '../models/NotionTaskResponse';
 
 const filteredStatuses = ['Archived', 'Done', 'Canceled'];
 
@@ -20,6 +20,6 @@ export async function getNotionTaskList() {
   });
 
   return mapNotionTaskList(
-    response.results as unknown as Array<NotionTaskRowResponse>,
+    response.results as unknown as Array<NotionTaskResponse>,
   );
 }
