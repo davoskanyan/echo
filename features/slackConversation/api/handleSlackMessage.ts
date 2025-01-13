@@ -1,4 +1,7 @@
-import { getNotionTaskList } from '@/features/notionTasks';
+import {
+  getNotionProjectList,
+  getNotionTaskList,
+} from '@/features/notionTasks';
 import {
   fetchSlackConversation,
   sendSlackMessage,
@@ -17,11 +20,11 @@ let lastEventTime = Number.NEGATIVE_INFINITY;
 
 export async function handleSlackMessage(
   slackMessage: SlackMessage,
-): Promise<string | undefined> {
+): Promise<object | undefined> {
   const { type, challenge, event } = slackMessage;
 
   if (type === 'url_verification') {
-    return challenge;
+    return { challenge };
   }
 
   const eventTime = Number(event.ts);
@@ -34,17 +37,21 @@ export async function handleSlackMessage(
     const { type: eventType, channel, bot_id } = event;
 
     if (eventType === 'message' && channel === SLACK_CHANNEL && !bot_id) {
-      const [tasks, slackConversation] = await Promise.all([
+      const [tasks, projects, slackConversation] = await Promise.all([
         getNotionTaskList(),
+        getNotionProjectList(),
         fetchSlackConversation(),
       ]);
 
       const answer = await getOpenaiChatCompletion({
         tasks,
+        projects,
         messages: slackConversation.messages,
       });
 
       await sendSlackMessage(answer);
+
+      return { answer };
     }
   }
 }

@@ -1,5 +1,8 @@
 import { fetchSlackConversation } from '@/features/slackConversation';
-import { getNotionTaskList } from '@/features/notionTasks';
+import {
+  getNotionTaskList,
+  getNotionProjectList,
+} from '@/features/notionTasks';
 import { getOpenaiChatCompletion } from '@/features/openaiChat';
 import { ConversationMessage } from '@/entities/conversation';
 import { getCurrentTime } from '@/shared/utils';
@@ -15,8 +18,9 @@ export async function POST(request: Request) {
   try {
     const { text, messagesMode = 'slack' }: RequestJson = await request.json();
 
-    const [notionTasks, slackConversation] = await Promise.all([
+    const [notionTasks, notionProjects, slackConversation] = await Promise.all([
       getNotionTaskList(),
+      getNotionProjectList(),
       fetchSlackConversation(),
     ]);
 
@@ -27,6 +31,7 @@ export async function POST(request: Request) {
     });
     const output = await getOpenaiChatCompletion({
       tasks: notionTasks,
+      projects: notionProjects,
       messages:
         messagesMode === 'slack' ? slackConversation.messages : messages,
     });
