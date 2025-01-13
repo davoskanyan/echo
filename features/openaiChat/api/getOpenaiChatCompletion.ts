@@ -1,20 +1,7 @@
 import { ConversationMessage } from '@/entities/conversation';
 import { PersonalTask } from '@/entities/personalTask';
 import { openaiClient } from '@/shared/openaiClient';
-
-function getCurrentTime() {
-  const currentDate = new Date();
-
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  }).format(currentDate);
-}
+import { getCurrentTime } from '@/shared/utils';
 
 function getSystemMessage(tasks: string) {
   return `You are Echo, a task management assistant designed to help with planning, brainstorming, organizing tasks, and managing priorities. Keep your tone friendly, encouraging, and helpful.
