@@ -1,4 +1,5 @@
 export interface NotionTaskResponse {
+  id: string;
   properties: {
     'Task name': {
       title: Array<{ text: { content: string } }>;

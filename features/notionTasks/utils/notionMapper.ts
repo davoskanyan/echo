@@ -1,12 +1,19 @@
-import { PersonalProject, PersonalTask } from '@/entities/personalTask';
+import {
+  PersonalProject,
+  PersonalTask,
+  TaskPriorityType,
+  TaskStatusType,
+} from '@/entities/personalTask';
 import { NotionTaskResponse } from '../models/NotionTaskResponse';
 import { NotionProjectResponse } from '../models/NotionProjectResponse';
 
 export function mapNotionTask(task: NotionTaskResponse): PersonalTask | null {
   return {
+    id: task.id,
     name: task.properties['Task name'].title[0].text.content,
-    status: task.properties.Status.status.name,
-    priority: task.properties['Priority API'].formula.string,
+    status: task.properties.Status.status.name as TaskStatusType,
+    priority: task.properties['Priority API'].formula
+      .string as TaskPriorityType,
     project: task.properties['Project API'].formula.string,
     duration: task.properties.Duration.formula.string,
     dueStart: task.properties.Due.date?.start,

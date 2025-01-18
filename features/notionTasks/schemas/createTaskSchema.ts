@@ -1,12 +1,21 @@
 import { z } from 'zod';
+import {
+  TaskPriority,
+  TaskPriorityType,
+  TaskStatus,
+  TaskStatusType,
+} from '@/entities/personalTask';
+import { zodValidators } from '@/shared/utils';
 
 export const createTaskSchema = z
   .object({
     name: z.string(),
     status: z
-      .enum(['Not Started', 'In Progress', 'Done', 'Archived'])
+      .custom<TaskStatusType>(...zodValidators.inObjectValues(TaskStatus))
       .optional(),
-    priority: z.enum(['Low', 'Medium', 'High']).optional(),
+    priority: z
+      .custom<TaskPriorityType>(...zodValidators.inObjectValues(TaskPriority))
+      .optional(),
     duration: z.string().optional(),
     dueStart: z.string().optional(),
     dueEnd: z.string().optional(),

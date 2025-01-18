@@ -1,20 +1,49 @@
+import { readFile } from 'node:fs/promises';
+import Mustache from 'mustache';
+import { updateNotionTask } from '@/features/notionTasks';
 import { ConversationMessage } from '@/entities/conversation';
-import { PersonalProject, PersonalTask } from '@/entities/personalTask';
+import {
+  PersonalProject,
+  PersonalTask,
+  TaskPriority,
+  TaskStatus,
+} from '@/entities/personalTask';
 import { openaiClient } from '@/shared/openaiClient';
 import { getCurrentTime } from '@/shared/utils';
 
-function getSystemMessage(tasks: string, projects: string) {
-  return `You are Echo, a task management assistant designed to help with planning, brainstorming, organizing tasks, and managing priorities. Keep your tone friendly, encouraging, and helpful.
+async function getActionMessage(
+  tasks: Array<PersonalTask>,
+  projects: Array<PersonalProject>,
+) {
+  const templateUrl = new URL('./template-action.mustache', import.meta.url);
+  const template = await readFile(templateUrl, 'utf8');
+  const data = {
+    tasks: JSON.stringify(tasks),
+    projects: JSON.stringify(projects),
+    taskStatuses: Object.values(TaskStatus),
+    taskPriorities: Object.values(TaskPriority),
+  };
+  return Mustache.render(template, data);
+}
 
-I would like you to respond with short answers and provide one question or suggestion at a time.
-
-For now you can just provide info on my tasks and projects. You can't create, update, or delete tasks.
-
-Current time is: ${getCurrentTime()}
-
-Here are all my projects: ${projects}
-
-Here are all my tasks: ${tasks}`;
+async function getUserAnswerMessage(
+  tasks: Array<PersonalTask>,
+  projects: Array<PersonalProject>,
+  actionMessage?: string,
+) {
+  const currentTime = getCurrentTime();
+  const templateUrl = new URL(
+    './template-user-answer.mustache',
+    import.meta.url,
+  );
+  const template = await readFile(templateUrl, 'utf8');
+  const data = {
+    tasks: JSON.stringify(tasks),
+    projects: JSON.stringify(projects),
+    currentTime,
+    actionMessage,
+  };
+  return Mustache.render(template, data);
 }
 
 function mapGptMessages(messages: Array<ConversationMessage>) {
@@ -46,19 +75,44 @@ export async function getOpenaiChatCompletion(
 
   const gptMessages = mapGptMessages(messages);
 
-  const completion = await openaiClient.chat.completions.create({
+  const actionCompletion = await openaiClient.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      ...gptMessages,
+      {
+        role: 'developer',
+        content: await getActionMessage(tasks, projects),
+      },
+    ],
+  });
+
+  const actionOutputStr = actionCompletion.choices[0].message.content as string;
+  let actionMessage;
+  try {
+    const actionOutput = JSON.parse(actionOutputStr);
+    if (actionOutput.action === 'update task') {
+      const response = await updateNotionTask(actionOutput.task);
+      actionMessage = `Task updated: ${JSON.stringify(response, null, 2)}`;
+    }
+  } catch (error) {
+    console.error(
+      'Error performing action:',
+      error,
+      'action output:',
+      actionOutputStr,
+    );
+  }
+
+  const userCompletion = await openaiClient.chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [
       {
         role: 'developer',
-        content: getSystemMessage(
-          JSON.stringify(tasks, null, 2),
-          JSON.stringify(projects, null, 2),
-        ),
+        content: await getUserAnswerMessage(tasks, projects, actionMessage),
       },
       ...gptMessages,
     ],
   });
 
-  return completion.choices[0].message.content as string;
+  return userCompletion.choices[0].message.content as string;
 }

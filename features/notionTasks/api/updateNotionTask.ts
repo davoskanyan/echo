@@ -7,21 +7,17 @@ import {
 import { NotionTaskResponse } from '../models/NotionTaskResponse';
 import { updateTaskSchema } from '../schemas/updateTaskSchema';
 
-interface UpdateNotionTaskOptions {
+type UpdateNotionTaskOptions = Partial<PersonalTask> & {
   id: string;
-  taskUpdates: Partial<PersonalTask>;
-}
+};
 
-export async function updateNotionTask({
-  id,
-  taskUpdates,
-}: UpdateNotionTaskOptions) {
+export async function updateNotionTask(taskUpdates: UpdateNotionTaskOptions) {
   const properties = mapTaskToNotionProperties(
     updateTaskSchema.parse(taskUpdates),
   );
 
   const response = await notionClient.pages.update({
-    page_id: id,
+    page_id: taskUpdates.id,
     properties,
   });
 

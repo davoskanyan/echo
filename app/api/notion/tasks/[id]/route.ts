@@ -26,7 +26,7 @@ export async function PATCH(
     const { id } = await params;
     const taskUpdates = await request.json();
 
-    const updatedTask = await updateNotionTask({ id, taskUpdates });
+    const updatedTask = await updateNotionTask({ ...taskUpdates, id });
     return Response.json(updatedTask);
   } catch (error) {
     const notionError = parseNotionError(error);
