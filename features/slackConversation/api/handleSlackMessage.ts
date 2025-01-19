@@ -16,7 +16,21 @@ interface SlackMessage {
   event: BotMessageEvent;
 }
 
-let lastEventTime = Number.NEGATIVE_INFINITY;
+async function handleSlackUserMessage() {
+  const [tasks, projects, slackConversation] = await Promise.all([
+    getNotionTaskList(),
+    getNotionProjectList(),
+    fetchSlackConversation(),
+  ]);
+
+  const answer = await getOpenaiChatCompletion({
+    tasks,
+    projects,
+    messages: slackConversation.messages,
+  });
+
+  await sendSlackMessage(answer);
+}
 
 export async function handleSlackMessage(
   slackMessage: SlackMessage,
@@ -27,31 +41,13 @@ export async function handleSlackMessage(
     return { challenge };
   }
 
-  const eventTime = Number(event.ts);
-  if (lastEventTime >= eventTime) {
-    return;
-  }
-  lastEventTime = eventTime;
-
   if (type === 'event_callback') {
     const { type: eventType, channel, bot_id } = event;
 
     if (eventType === 'message' && channel === SLACK_CHANNEL && !bot_id) {
-      const [tasks, projects, slackConversation] = await Promise.all([
-        getNotionTaskList(),
-        getNotionProjectList(),
-        fetchSlackConversation(),
-      ]);
-
-      const answer = await getOpenaiChatCompletion({
-        tasks,
-        projects,
-        messages: slackConversation.messages,
-      });
-
-      await sendSlackMessage(answer);
-
-      return { answer };
+      // Not awaiting the response intentionally to prevent Slack from retrying the message
+      void handleSlackUserMessage();
+      return;
     }
   }
 }
