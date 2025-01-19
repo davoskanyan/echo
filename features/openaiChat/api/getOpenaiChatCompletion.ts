@@ -1,4 +1,4 @@
-import { updateNotionTask } from '@/features/notionTasks';
+import { createNotionTask, updateNotionTask } from '@/features/notionTasks';
 import { ConversationMessage } from '@/entities/conversation';
 import {
   PersonalProject,
@@ -31,14 +31,14 @@ function getActionMessage(
 function getUserAnswerMessage(
   tasks: Array<PersonalTask>,
   projects: Array<PersonalProject>,
-  actionMessage?: string,
+  lastAction?: string,
 ) {
   const currentTime = getCurrentTime();
   const data = {
     tasks: JSON.stringify(tasks),
     projects: JSON.stringify(projects),
     currentTime,
-    actionMessage,
+    lastAction,
   };
 
   return Object.entries(data).reduce(
@@ -91,18 +91,27 @@ export async function getOpenaiChatCompletion(
   let actionMessage;
   try {
     const actionOutput = JSON.parse(actionOutputStr);
-    if (actionOutput.action === 'update task') {
-      const response = await updateNotionTask(actionOutput.task);
-      actionMessage = `Task updated: ${JSON.stringify(response, null, 2)}`;
+    if (actionOutput.action === 'updateTask') {
+      try {
+        const response = await updateNotionTask(actionOutput.task);
+        actionMessage = `Task updated: ${JSON.stringify(response, null, 2)}`;
+      } catch (error) {
+        actionMessage = 'Error performing action to update the task';
+        console.error('Error creating task:', error);
+      }
     }
-  } catch (error) {
-    actionMessage = 'Error performing action to update the task';
-    console.error(
-      'Error performing action:',
-      error,
-      'action output:',
-      actionOutputStr,
-    );
+    if (actionOutput.action === 'createTask') {
+      try {
+        const response = await createNotionTask(actionOutput.task);
+        actionMessage = `Task created: ${JSON.stringify(response, null, 2)}`;
+      } catch (error) {
+        actionMessage = 'Error performing action to create the task';
+        console.error('Error creating task:', error);
+      }
+    }
+  } catch {
+    actionMessage = 'Error an performing action';
+    console.error('Error parsing action output:', actionOutputStr);
   }
 
   const userCompletion = await openaiClient.chat.completions.create({

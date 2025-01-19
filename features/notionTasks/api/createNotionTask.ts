@@ -14,11 +14,7 @@ type NewTask = Partial<PersonalTask> & {
   name: string;
 };
 
-interface CreateNotionTaskOptions {
-  task: NewTask;
-}
-
-export async function createNotionTask({ task }: CreateNotionTaskOptions) {
+export async function createNotionTask(task: NewTask) {
   const taskParsed = createTaskSchema.parse(task);
 
   if (!taskParsed.projectId && taskParsed.project) {

@@ -17,7 +17,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const task = await request.json();
   try {
-    const newTask = await createNotionTask({ task });
+    const newTask = await createNotionTask(task);
     return Response.json(newTask);
   } catch (error) {
     const notionError = parseNotionError(error);
