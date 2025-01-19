@@ -96,6 +96,7 @@ export async function getOpenaiChatCompletion(
       actionMessage = `Task updated: ${JSON.stringify(response, null, 2)}`;
     }
   } catch (error) {
+    actionMessage = 'Error performing action to update the task';
     console.error(
       'Error performing action:',
       error,

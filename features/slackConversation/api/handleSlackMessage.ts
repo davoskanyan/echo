@@ -29,7 +29,6 @@ export async function handleSlackMessage(
     const { type: eventType, channel, bot_id } = event;
 
     if (eventType === 'message' && channel === SLACK_CHANNEL && !bot_id) {
-      // Not awaiting the response intentionally to prevent Slack from retrying the message
       const [tasks, projects, slackConversation] = await Promise.all([
         getNotionTaskList(),
         getNotionProjectList(),
