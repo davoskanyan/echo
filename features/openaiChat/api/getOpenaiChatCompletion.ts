@@ -1,5 +1,3 @@
-import { readFile } from 'node:fs/promises';
-import Mustache from 'mustache';
 import { updateNotionTask } from '@/features/notionTasks';
 import { ConversationMessage } from '@/entities/conversation';
 import {
@@ -10,40 +8,43 @@ import {
 } from '@/entities/personalTask';
 import { openaiClient } from '@/shared/openaiClient';
 import { getCurrentTime } from '@/shared/utils';
+import { templateAction } from './templateAction';
+import { templateUserAnswer } from './templateUserAnswer';
 
-async function getActionMessage(
+function getActionMessage(
   tasks: Array<PersonalTask>,
   projects: Array<PersonalProject>,
 ) {
-  const templateUrl = new URL('./template-action.mustache', import.meta.url);
-  const template = await readFile(templateUrl, 'utf8');
   const data = {
     tasks: JSON.stringify(tasks),
     projects: JSON.stringify(projects),
-    taskStatuses: Object.values(TaskStatus),
-    taskPriorities: Object.values(TaskPriority),
+    taskStatuses: Object.values(TaskStatus).join(','),
+    taskPriorities: Object.values(TaskPriority).join(','),
   };
-  return Mustache.render(template, data);
+
+  return Object.entries(data).reduce(
+    (template, [key, value]) => template.replaceAll(`{{${key}}}`, value),
+    templateAction,
+  );
 }
 
-async function getUserAnswerMessage(
+function getUserAnswerMessage(
   tasks: Array<PersonalTask>,
   projects: Array<PersonalProject>,
   actionMessage?: string,
 ) {
   const currentTime = getCurrentTime();
-  const templateUrl = new URL(
-    './template-user-answer.mustache',
-    import.meta.url,
-  );
-  const template = await readFile(templateUrl, 'utf8');
   const data = {
     tasks: JSON.stringify(tasks),
     projects: JSON.stringify(projects),
     currentTime,
     actionMessage,
   };
-  return Mustache.render(template, data);
+
+  return Object.entries(data).reduce(
+    (template, [key, value]) => template.replaceAll(`{{${key}}}`, value || ''),
+    templateUserAnswer,
+  );
 }
 
 function mapGptMessages(messages: Array<ConversationMessage>) {
@@ -81,7 +82,7 @@ export async function getOpenaiChatCompletion(
       ...gptMessages,
       {
         role: 'developer',
-        content: await getActionMessage(tasks, projects),
+        content: getActionMessage(tasks, projects),
       },
     ],
   });
@@ -108,7 +109,7 @@ export async function getOpenaiChatCompletion(
     messages: [
       {
         role: 'developer',
-        content: await getUserAnswerMessage(tasks, projects, actionMessage),
+        content: getUserAnswerMessage(tasks, projects, actionMessage),
       },
       ...gptMessages,
     ],
